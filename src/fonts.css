@@ -1,0 +1,17 @@
+@font-face {
+  font-family: "FT Polar";
+  src: url("../public/fonts/FTPolar-Medium.woff") format("woff");
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "FT Polar";
+  src: url("../public/fonts/FTPolar-Semibold.woff") format("woff");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "FT Polar Mono";
+  src: url("../public/fonts/FTPolarSemiMono-Bold.woff") format("woff");
+  font-weight: bold;
+} 
