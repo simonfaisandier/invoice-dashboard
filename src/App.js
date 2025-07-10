@@ -143,7 +143,7 @@ function App() {
           marginTop: 0
         }}
       >
-        Invoice Wars
+        Live Invoice Dashboard
       </h1>
       {/* Two columns */}
       <div
