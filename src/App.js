@@ -10,25 +10,23 @@ function App() {
       .then((res) => res.json())
       .then((res) => {
         const dataArray = Array.isArray(res) ? res : [];
-        
-        // Aggregate assignments for each person (case-insensitive, trimmed)
         const aggregated = {};
+
         dataArray.forEach(person => {
-          const name = person.name.trim().toLowerCase();
-          if (!aggregated[name]) {
-            aggregated[name] = { ...person };
-            aggregated[name].approved = Number(person.approved) || 0;
-            aggregated[name].total = Number(person.total) || 0;
-          } else {
+          // Split names by comma for group assignments
+          const names = person.name.split(',').map(n => n.trim());
+          names.forEach(name => {
+            if (!aggregated[name]) {
+              aggregated[name] = { name, approved: 0, total: 0 };
+            }
             aggregated[name].approved += Number(person.approved) || 0;
             aggregated[name].total += Number(person.total) || 0;
-          }
+          });
         });
+
         const uniqueData = Object.values(aggregated);
-        
         console.log("Names from API (aggregated):", uniqueData.map(person => person.name));
         setData(uniqueData);
-        // Trigger animations after data loads
         setTimeout(() => setIsLoaded(true), 100);
       });
   }, []);
