@@ -46,13 +46,14 @@ function App() {
 
 
   // Distribute people into three columns using round-robin assignment
-  // Build rows: each row contains up to 3 people
   const colCount = 3;
-  const rows = [];
-  for (let i = 0; i < data.length; i += colCount) {
-    rows.push(data.slice(i, i + colCount));
-  }
-  const numRows = rows.length;
+  const columns = Array.from({ length: colCount }, () => []);
+  data.forEach((person, idx) => {
+    columns[idx % colCount].push(person);
+  });
+
+  // Calculate the number of rows (max of all columns)
+  const numRows = Math.max(...columns.map(col => col.length));
   // Calculate dynamic row height
   // We'll subtract the header height (approx 5.5rem) and top/bottom padding (5rem) from 100vh
   const gridAvailableHeight = 'calc(100vh - 5.5rem - 5rem)';
@@ -208,23 +209,21 @@ function App() {
       >
         Live Invoice Dashboard
       </h1>
-      {/* Table-like grid: each row has up to 3 people, ragged columns */}
+      {/* Three columns with grid for vertical fit, no scroll */}
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
+          flexDirection: "row",
+          gap: "3vw",
+          justifyContent: "flex-start",
+          alignItems: "stretch",
           height: gridAvailableHeight,
           minHeight: 0
         }}
       >
-        {rows.map((row, rowIdx) => (
-          <div key={rowIdx} style={{ display: "flex", flexDirection: "row", gap: "3vw", height: rowHeight, alignItems: "center", justifyContent: "flex-start" }}>
-            {Array.from({ length: colCount }).map((_, colIdx) => (
-              <div key={colIdx} style={{ flex: 1, minWidth: 200, height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {row[colIdx] ? renderPerson(row[colIdx], rowIdx * colCount + colIdx) : null}
-              </div>
-            ))}
+        {columns.map((col, colIdx) => (
+          <div key={colIdx} style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
+            {col.map((person, index) => renderPerson(person, index + colIdx * numRows))}
           </div>
         ))}
       </div>
