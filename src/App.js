@@ -50,98 +50,107 @@ function App() {
   const leftCol = data.slice(0, mid);
   const rightCol = data.slice(mid);
 
+  // Calculate the number of rows (max of left or right column)
+  const numRows = Math.max(leftCol.length, rightCol.length);
+  // Calculate dynamic row height
+  const rowHeight = `calc((100vh - 8rem) / ${numRows})`;
+  // Dynamic avatar and font sizes
+  const avatarSize = `min(108px, calc((100vh - 8rem) / ${numRows} * 0.7))`;
+  const nameFontSize = `min(22pt, calc((100vh - 8rem) / ${numRows} * 0.22))`;
+  const progressFontSize = `min(12pt, calc((100vh - 8rem) / ${numRows} * 0.13))`;
+
   const renderPerson = (person, index) => {
     const percent = person.total > 0 ? (person.approved / person.total) * 100 : 0;
     const fadeInDelay = index * 0.1; // Stagger the fade-in animations
     const progressDelay = 0.5 + fadeInDelay; // Progress bar animates after fade-in
-    
     return (
-      <div 
-        key={person.name} 
-        style={{ 
-          marginBottom: "3.5rem",
+      <div
+        key={person.name}
+        style={{
+          marginBottom: 0,
+          height: rowHeight,
+          display: "flex",
+          alignItems: "center",
           opacity: isLoaded ? 1 : 0,
           transform: isLoaded ? "translateY(0)" : "translateY(20px)",
           transition: `opacity 0.6s ease-out ${fadeInDelay}s, transform 0.6s ease-out ${fadeInDelay}s`
         }}
       >
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", minHeight: 72 }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 100 }}>
-            <img
-              src={`/avatars/${person.name.split(' ')[0].toLowerCase()}.png`}
-              alt={person.name}
-              style={{
-                width: 108,
-                height: 108,
-                borderRadius: "50%",
-                objectFit: "cover"
-              }}
-              onError={(e) => {
-                e.target.src = "/avatars/fallback.png";
-              }}
-            />
-            <span
-              style={{
-                fontSize: "22pt",
-                fontFamily: "FT Polar",
-                fontWeight: 600,
-                marginTop: 8,
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}
-            >
-              {person.name.split(' ')[0]}
-              {mostApproved.includes(person) && (
-                <span style={{ fontSize: "18pt" }}>🏆</span>
-              )}
-            </span>
-          </div>
-          <div style={{ flex: 1, marginLeft: 32, display: "flex", alignItems: "center", position: "relative", height: 72, top: "-27px" }}>
-            {/* Progress count above bar */}
-            <span
-              style={{
-                position: "absolute",
-                right: 12,
-                top: "50%",
-                transform: "translateY(-150%)",
-                fontSize: "12pt",
-                fontFamily: "FT Polar Mono",
-                fontWeight: "bold",
-                minWidth: 50,
-                textAlign: "right",
-                color: "#262724",
-                background: "#F8F5EC",
-                padding: "0 6px",
-                borderRadius: "8px",
-                zIndex: 2
-              }}
-            >
-              {person.approved} / {person.total}
-            </span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: avatarSize }}>
+          <img
+            src={`/avatars/${person.name.split(' ')[0].toLowerCase()}.png`}
+            alt={person.name}
+            style={{
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: "50%",
+              objectFit: "cover"
+            }}
+            onError={(e) => {
+              e.target.src = "/avatars/fallback.png";
+            }}
+          />
+          <span
+            style={{
+              fontSize: nameFontSize,
+              fontFamily: "FT Polar",
+              fontWeight: 600,
+              marginTop: 8,
+              textAlign: "center",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }}
+          >
+            {person.name.split(' ')[0]}
+            {mostApproved.includes(person) && (
+              <span style={{ fontSize: `calc(${nameFontSize} * 0.8)` }}>🏆</span>
+            )}
+          </span>
+        </div>
+        <div style={{ flex: 1, marginLeft: 32, display: "flex", alignItems: "center", position: "relative", height: avatarSize, top: "-27px" }}>
+          {/* Progress count above bar */}
+          <span
+            style={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-150%)",
+              fontSize: progressFontSize,
+              fontFamily: "FT Polar Mono",
+              fontWeight: "bold",
+              minWidth: 50,
+              textAlign: "right",
+              color: "#262724",
+              background: "#F8F5EC",
+              padding: "0 6px",
+              borderRadius: "8px",
+              zIndex: 2
+            }}
+          >
+            {person.approved} / {person.total}
+          </span>
+          <div
+            style={{
+              background: "#D1C6B4",
+              borderRadius: "12px",
+              overflow: "hidden",
+              height: "18px",
+              flex: 1,
+              marginRight: 16,
+              display: "flex",
+              alignItems: "center"
+            }}
+          >
             <div
               style={{
-                background: "#D1C6B4",
-                borderRadius: "12px",
-                overflow: "hidden",
-                height: "18px",
-                flex: 1,
-                marginRight: 16,
-                display: "flex",
-                alignItems: "center"
+                background: "#585F51",
+                width: isLoaded ? `${percent}%` : "0%",
+                height: "100%",
+                transition: `width 0.8s ease-out ${progressDelay}s`,
+                borderRadius: "12px"
               }}
-            >
-              <div
-                style={{
-                  background: "#585F51",
-                  width: isLoaded ? `${percent}%` : "0%",
-                  height: "100%",
-                  transition: `width 0.8s ease-out ${progressDelay}s`,
-                  borderRadius: "12px"
-                }}
-              />
-            </div>
+            />
           </div>
         </div>
       </div>
@@ -152,11 +161,12 @@ function App() {
     <div
       style={{
         backgroundColor: "#F8F5EC",
-        minHeight: "100vh",
+        height: "100vh",
         padding: "3rem 3rem 2rem 3rem",
         fontFamily: "FT Polar, sans-serif",
         color: "#222",
-        position: "relative"
+        position: "relative",
+        overflow: "hidden"
       }}
     >
       {/* Logo in top-right */}
@@ -191,19 +201,21 @@ function App() {
       >
         Live Invoice Dashboard
       </h1>
-      {/* Two columns */}
+      {/* Two columns with grid for vertical fit */}
       <div
         style={{
           display: "flex",
           flexDirection: "row",
           gap: "5vw",
-          justifyContent: "flex-start"
+          justifyContent: "flex-start",
+          alignItems: "stretch",
+          height: `calc(100vh - 8rem)`
         }}
       >
-        <div style={{ flex: 1, minWidth: 350 }}>
+        <div style={{ flex: 1, minWidth: 350, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
           {leftCol.map((person, index) => renderPerson(person, index))}
         </div>
-        <div style={{ flex: 1, minWidth: 350 }}>
+        <div style={{ flex: 1, minWidth: 350, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
           {rightCol.map((person, index) => renderPerson(person, index + leftCol.length))}
         </div>
       </div>
