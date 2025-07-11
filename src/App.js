@@ -11,12 +11,22 @@ function App() {
       .then((res) => {
         const dataArray = Array.isArray(res) ? res : [];
         
-        // Remove duplicates based on name
-        const uniqueData = dataArray.filter((person, index, self) => 
-          index === self.findIndex(p => p.name === person.name)
-        );
+        // Aggregate assignments for each person (case-insensitive, trimmed)
+        const aggregated = {};
+        dataArray.forEach(person => {
+          const name = person.name.trim().toLowerCase();
+          if (!aggregated[name]) {
+            aggregated[name] = { ...person };
+            aggregated[name].approved = Number(person.approved) || 0;
+            aggregated[name].total = Number(person.total) || 0;
+          } else {
+            aggregated[name].approved += Number(person.approved) || 0;
+            aggregated[name].total += Number(person.total) || 0;
+          }
+        });
+        const uniqueData = Object.values(aggregated);
         
-        console.log("Names from API:", uniqueData.map(person => person.name));
+        console.log("Names from API (aggregated):", uniqueData.map(person => person.name));
         setData(uniqueData);
         // Trigger animations after data loads
         setTimeout(() => setIsLoaded(true), 100);
