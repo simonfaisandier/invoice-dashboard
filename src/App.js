@@ -45,13 +45,17 @@ function App() {
 
 
 
-  // Split data into two columns
-  const mid = Math.ceil(data.length / 2);
-  const leftCol = data.slice(0, mid);
-  const rightCol = data.slice(mid);
+  // Split data into three columns
+  const colCount = 3;
+  const colLength = Math.ceil(data.length / colCount);
+  const columns = [
+    data.slice(0, colLength),
+    data.slice(colLength, colLength * 2),
+    data.slice(colLength * 2)
+  ];
 
-  // Calculate the number of rows (max of left or right column)
-  const numRows = Math.max(leftCol.length, rightCol.length);
+  // Calculate the number of rows (max of all columns)
+  const numRows = Math.max(...columns.map(col => col.length));
   // Calculate dynamic row height
   const rowHeight = `calc((100vh - 8rem) / ${numRows})`;
   // Dynamic avatar and font sizes
@@ -76,7 +80,8 @@ function App() {
           transition: `opacity 0.6s ease-out ${fadeInDelay}s, transform 0.6s ease-out ${fadeInDelay}s`
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: avatarSize }}>
+        {/* Avatar and name vertically centered as a flex column */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minWidth: avatarSize, height: "100%" }}>
           <img
             src={`/avatars/${person.name.split(' ')[0].toLowerCase()}.png`}
             alt={person.name}
@@ -84,7 +89,8 @@ function App() {
               width: avatarSize,
               height: avatarSize,
               borderRadius: "50%",
-              objectFit: "cover"
+              objectFit: "cover",
+              display: "block"
             }}
             onError={(e) => {
               e.target.src = "/avatars/fallback.png";
@@ -92,14 +98,16 @@ function App() {
           />
           <span
             style={{
-              fontSize: nameFontSize,
+              fontSize: `calc(${nameFontSize} * 0.7)`,
               fontFamily: "FT Polar",
               fontWeight: 600,
               marginTop: 8,
               textAlign: "center",
               display: "flex",
               alignItems: "center",
-              gap: "8px"
+              gap: "8px",
+              wordBreak: "break-word",
+              maxWidth: avatarSize
             }}
           >
             {person.name.split(' ')[0]}
@@ -201,23 +209,22 @@ function App() {
       >
         Live Invoice Dashboard
       </h1>
-      {/* Two columns with grid for vertical fit */}
+      {/* Three columns with grid for vertical fit */}
       <div
         style={{
           display: "flex",
           flexDirection: "row",
-          gap: "5vw",
+          gap: "3vw",
           justifyContent: "flex-start",
           alignItems: "stretch",
           height: `calc(100vh - 8rem)`
         }}
       >
-        <div style={{ flex: 1, minWidth: 350, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
-          {leftCol.map((person, index) => renderPerson(person, index))}
-        </div>
-        <div style={{ flex: 1, minWidth: 350, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
-          {rightCol.map((person, index) => renderPerson(person, index + leftCol.length))}
-        </div>
+        {columns.map((col, colIdx) => (
+          <div key={colIdx} style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
+            {col.map((person, index) => renderPerson(person, index + colIdx * colLength))}
+          </div>
+        ))}
       </div>
     </div>
   );
