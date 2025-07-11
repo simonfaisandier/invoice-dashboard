@@ -3,47 +3,73 @@ import "./fonts.css";
 
 function App() {
   const [data, setData] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     fetch("https://n8n-faisandier-u48592.vm.elestio.app/webhook/invoice-dashboard")
       .then((res) => res.json())
       .then((res) => {
-        setData(Array.isArray(res) ? res : []);
+        const dataArray = Array.isArray(res) ? res : [];
+        
+        // Remove duplicates based on name
+        const uniqueData = dataArray.filter((person, index, self) => 
+          index === self.findIndex(p => p.name === person.name)
+        );
+        
+        console.log("Names from API:", uniqueData.map(person => person.name));
+        setData(uniqueData);
+        // Trigger animations after data loads
+        setTimeout(() => setIsLoaded(true), 100);
       });
   }, []);
 
-  const avatarMap = {
-    "Ty Loveridge": "/avatars/ty.png",
-    "Declan Bowers": "/avatars/declan.png",
-    "Taryn Brouwer": "/avatars/taryn.png",
-    "Isaac": "/avatars/isaac.png",
-    "Josh": "/avatars/josh.png",
-    "Zach": "/avatars/zach.png",
-    "Collette": "/avatars/collette.png",
-    "Jessie": "/avatars/jessie.png",
-    "Piri": "/avatars/piri.png"
-    // Add more as needed
-  };
+
+
+  // Calculate winners - only for people who have completed ALL their assigned invoices (approved = total)
+  const peopleWhoCompletedAll = data.filter(person => Number(person.approved) === Number(person.total) && Number(person.approved) > 0);
+  const maxApproved = peopleWhoCompletedAll.length > 0 ? Math.max(...peopleWhoCompletedAll.map(person => Number(person.approved))) : 0;
+  
+  const mostApproved = data.filter(person => 
+    Number(person.approved) === maxApproved && 
+    Number(person.approved) > 0 && 
+    Number(person.approved) === Number(person.total)
+  );
+
+
 
   // Split data into two columns
   const mid = Math.ceil(data.length / 2);
   const leftCol = data.slice(0, mid);
   const rightCol = data.slice(mid);
 
-  const renderPerson = (person) => {
+  const renderPerson = (person, index) => {
     const percent = person.total > 0 ? (person.approved / person.total) * 100 : 0;
+    const fadeInDelay = index * 0.1; // Stagger the fade-in animations
+    const progressDelay = 0.5 + fadeInDelay; // Progress bar animates after fade-in
+    
     return (
-      <div key={person.name} style={{ marginBottom: "3.5rem" }}>
+      <div 
+        key={person.name} 
+        style={{ 
+          marginBottom: "3.5rem",
+          opacity: isLoaded ? 1 : 0,
+          transform: isLoaded ? "translateY(0)" : "translateY(20px)",
+          transition: `opacity 0.6s ease-out ${fadeInDelay}s, transform 0.6s ease-out ${fadeInDelay}s`
+        }}
+      >
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", minHeight: 72 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 100 }}>
             <img
-              src={avatarMap[person.name] || "/avatars/fallback.png"}
+              src={`/avatars/${person.name.split(' ')[0].toLowerCase()}.png`}
               alt={person.name}
               style={{
                 width: 108,
                 height: 108,
                 borderRadius: "50%",
                 objectFit: "cover"
+              }}
+              onError={(e) => {
+                e.target.src = "/avatars/fallback.png";
               }}
             />
             <span
@@ -52,10 +78,16 @@ function App() {
                 fontFamily: "FT Polar",
                 fontWeight: 600,
                 marginTop: 8,
-                textAlign: "center"
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
               }}
             >
               {person.name.split(' ')[0]}
+              {mostApproved.includes(person) && (
+                <span style={{ fontSize: "18pt" }}>🏆</span>
+              )}
             </span>
           </div>
           <div style={{ flex: 1, marginLeft: 32, display: "flex", alignItems: "center", position: "relative", height: 72, top: "-27px" }}>
@@ -95,9 +127,9 @@ function App() {
               <div
                 style={{
                   background: "#585F51",
-                  width: `${percent}%`,
+                  width: isLoaded ? `${percent}%` : "0%",
                   height: "100%",
-                  transition: "width 0.5s",
+                  transition: `width 0.8s ease-out ${progressDelay}s`,
                   borderRadius: "12px"
                 }}
               />
@@ -128,7 +160,10 @@ function App() {
           top: 60,
           right: 32,
           width: 48,
-          height: 48
+          height: 48,
+          opacity: isLoaded ? 1 : 0,
+          transform: isLoaded ? "translateY(0)" : "translateY(-20px)",
+          transition: "opacity 0.6s ease-out 0.2s, transform 0.6s ease-out 0.2s"
         }}
       />
       {/* Header */}
@@ -140,7 +175,10 @@ function App() {
           letterSpacing: "-0.4px",
           textAlign: "left",
           marginBottom: "2.5rem",
-          marginTop: 0
+          marginTop: 0,
+          opacity: isLoaded ? 1 : 0,
+          transform: isLoaded ? "translateY(0)" : "translateY(-20px)",
+          transition: "opacity 0.6s ease-out 0.1s, transform 0.6s ease-out 0.1s"
         }}
       >
         Live Invoice Dashboard
@@ -155,10 +193,10 @@ function App() {
         }}
       >
         <div style={{ flex: 1, minWidth: 350 }}>
-          {leftCol.map(renderPerson)}
+          {leftCol.map((person, index) => renderPerson(person, index))}
         </div>
         <div style={{ flex: 1, minWidth: 350 }}>
-          {rightCol.map(renderPerson)}
+          {rightCol.map((person, index) => renderPerson(person, index + leftCol.length))}
         </div>
       </div>
     </div>
