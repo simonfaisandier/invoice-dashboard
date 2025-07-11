@@ -45,23 +45,23 @@ function App() {
 
 
 
-  // Split data into three columns
+  // Distribute people into three columns using round-robin assignment
   const colCount = 3;
-  const colLength = Math.ceil(data.length / colCount);
-  const columns = [
-    data.slice(0, colLength),
-    data.slice(colLength, colLength * 2),
-    data.slice(colLength * 2)
-  ];
+  const columns = Array.from({ length: colCount }, () => []);
+  data.forEach((person, idx) => {
+    columns[idx % colCount].push(person);
+  });
 
   // Calculate the number of rows (max of all columns)
   const numRows = Math.max(...columns.map(col => col.length));
   // Calculate dynamic row height
-  const rowHeight = `calc((100vh - 8rem) / ${numRows})`;
+  // We'll subtract the header height (approx 5.5rem) and top/bottom padding (5rem) from 100vh
+  const gridAvailableHeight = 'calc(100vh - 5.5rem - 5rem)';
+  const rowHeight = `calc((${gridAvailableHeight}) / ${numRows})`;
   // Dynamic avatar and font sizes
-  const avatarSize = `min(108px, calc((100vh - 8rem) / ${numRows} * 0.7))`;
-  const nameFontSize = `min(22pt, calc((100vh - 8rem) / ${numRows} * 0.22))`;
-  const progressFontSize = `min(12pt, calc((100vh - 8rem) / ${numRows} * 0.13))`;
+  const avatarSize = `min(108px, calc((${gridAvailableHeight}) / ${numRows} * 0.7))`;
+  const nameFontSize = `min(22pt, calc((${gridAvailableHeight}) / ${numRows} * 0.22))`;
+  const progressFontSize = `min(12pt, calc((${gridAvailableHeight}) / ${numRows} * 0.13))`;
 
   const renderPerson = (person, index) => {
     const percent = person.total > 0 ? (person.approved / person.total) * 100 : 0;
@@ -209,7 +209,7 @@ function App() {
       >
         Live Invoice Dashboard
       </h1>
-      {/* Three columns with grid for vertical fit */}
+      {/* Three columns with grid for vertical fit, no scroll */}
       <div
         style={{
           display: "flex",
@@ -217,12 +217,13 @@ function App() {
           gap: "3vw",
           justifyContent: "flex-start",
           alignItems: "stretch",
-          height: `calc(100vh - 8rem)`
+          height: gridAvailableHeight,
+          minHeight: 0
         }}
       >
         {columns.map((col, colIdx) => (
           <div key={colIdx} style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
-            {col.map((person, index) => renderPerson(person, index + colIdx * colLength))}
+            {col.map((person, index) => renderPerson(person, index + colIdx * numRows))}
           </div>
         ))}
       </div>
