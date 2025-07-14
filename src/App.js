@@ -165,7 +165,7 @@ function App() {
         color: "#222",
         position: "relative",
         overflow: "hidden",
-        minWidth: "360px"
+        minWidth: "264px"
       }}
     >
       {/* Logo in top-right */}
