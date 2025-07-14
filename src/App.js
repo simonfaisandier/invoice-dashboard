@@ -4,6 +4,27 @@ import "./fonts.css";
 function App() {
   const [data, setData] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [colCount, setColCount] = useState(3);
+
+  // Get column count based on window width
+  const getColCount = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 1600) return 1;
+      return 4;
+    }
+    return 1;
+  };
+
+  // Update column count on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setColCount(getColCount());
+    };
+    
+    handleResize(); // Set initial
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetch("https://n8n-faisandier-u48592.vm.elestio.app/webhook/invoice-dashboard")
@@ -31,8 +52,6 @@ function App() {
       });
   }, []);
 
-
-
   // Calculate winners - only for people who have completed ALL their assigned invoices (approved = total)
   const peopleWhoCompletedAll = data.filter(person => Number(person.approved) === Number(person.total) && Number(person.approved) > 0);
   const maxApproved = peopleWhoCompletedAll.length > 0 ? Math.max(...peopleWhoCompletedAll.map(person => Number(person.approved))) : 0;
@@ -43,51 +62,30 @@ function App() {
     Number(person.approved) === Number(person.total)
   );
 
-
-
-  // Distribute people into three columns using round-robin assignment
-  const colCount = 3;
-  const columns = Array.from({ length: colCount }, () => []);
-  data.forEach((person, idx) => {
-    columns[idx % colCount].push(person);
-  });
-
-  // Calculate the number of rows (max of all columns)
-  const numRows = Math.max(...columns.map(col => col.length));
-  // Calculate dynamic row height
-  // We'll subtract the header height (approx 5.5rem) and top/bottom padding (5rem) from 100vh
-  const gridAvailableHeight = 'calc(100vh - 5.5rem - 5rem)';
-  const rowHeight = `calc((${gridAvailableHeight}) / ${numRows})`;
-  // Dynamic avatar and font sizes
-  const avatarSize = `min(108px, calc((${gridAvailableHeight}) / ${numRows} * 0.7))`;
-  const nameFontSize = `min(22pt, calc((${gridAvailableHeight}) / ${numRows} * 0.22))`;
-  const progressFontSize = `min(12pt, calc((${gridAvailableHeight}) / ${numRows} * 0.13))`;
-
   const renderPerson = (person, index) => {
     const percent = person.total > 0 ? (person.approved / person.total) * 100 : 0;
-    const fadeInDelay = index * 0.1; // Stagger the fade-in animations
-    const progressDelay = 0.5 + fadeInDelay; // Progress bar animates after fade-in
+    const fadeInDelay = index * 0.1;
+    const progressDelay = 0.5 + fadeInDelay;
     return (
       <div
         key={person.name}
         style={{
-          marginBottom: 0,
-          height: rowHeight,
           display: "flex",
           alignItems: "center",
+          marginBottom: "2rem",
           opacity: isLoaded ? 1 : 0,
           transform: isLoaded ? "translateY(0)" : "translateY(20px)",
           transition: `opacity 0.6s ease-out ${fadeInDelay}s, transform 0.6s ease-out ${fadeInDelay}s`
         }}
       >
-        {/* Avatar and name vertically centered as a flex column */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minWidth: avatarSize, height: "100%" }}>
+        {/* Avatar and name */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: "2rem" }}>
           <img
             src={`/avatars/${person.name.split(' ')[0].toLowerCase()}.png`}
             alt={person.name}
             style={{
-              width: avatarSize,
-              height: avatarSize,
+              width: "80px",
+              height: "80px",
               borderRadius: "50%",
               objectFit: "cover",
               display: "block"
@@ -98,41 +96,33 @@ function App() {
           />
           <span
             style={{
-              fontSize: `calc(${nameFontSize} * 0.7)`,
+              fontSize: "16px",
               fontFamily: "FT Polar",
               fontWeight: 600,
-              marginTop: 8,
-              textAlign: "center",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              wordBreak: "break-word",
-              maxWidth: avatarSize
+              marginTop: "8px",
+              textAlign: "center"
             }}
           >
             {person.name.split(' ')[0]}
             {mostApproved.includes(person) && (
-              <span style={{ fontSize: `calc(${nameFontSize} * 0.8)` }}>🏆</span>
+              <span style={{ marginLeft: "4px" }}>🏆</span>
             )}
           </span>
         </div>
-        <div style={{ flex: 1, marginLeft: 32, display: "flex", alignItems: "center", position: "relative", height: avatarSize, top: "-27px" }}>
-          {/* Progress count above bar */}
+        {/* Progress bar */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", position: "relative" }}>
           <span
             style={{
               position: "absolute",
-              right: 12,
+              right: "12px",
               top: "50%",
               transform: "translateY(-150%)",
-              fontSize: progressFontSize,
+              fontSize: "12px",
               fontFamily: "FT Polar Mono",
               fontWeight: "bold",
-              minWidth: 50,
-              textAlign: "right",
               color: "#262724",
-              background: "#F8F5EC",
               padding: "0 6px",
-              borderRadius: "8px",
+              paddingBottom: "5px",
               zIndex: 2
             }}
           >
@@ -145,7 +135,7 @@ function App() {
               overflow: "hidden",
               height: "18px",
               flex: 1,
-              marginRight: 16,
+              marginRight: "16px",
               display: "flex",
               alignItems: "center"
             }}
@@ -169,12 +159,13 @@ function App() {
     <div
       style={{
         backgroundColor: "#F8F5EC",
-        height: "100vh",
+        minHeight: "100vh",
         padding: "3rem 3rem 2rem 3rem",
         fontFamily: "FT Polar, sans-serif",
         color: "#222",
         position: "relative",
-        overflow: "hidden"
+        overflow: "hidden",
+        minWidth: "360px"
       }}
     >
       {/* Logo in top-right */}
@@ -199,31 +190,30 @@ function App() {
           fontFamily: "FT Polar",
           fontWeight: 500,
           letterSpacing: "-0.4px",
+          lineHeight: 1,
           textAlign: "left",
           marginBottom: "2.5rem",
           marginTop: 0,
           opacity: isLoaded ? 1 : 0,
           transform: isLoaded ? "translateY(0)" : "translateY(-20px)",
-          transition: "opacity 0.6s ease-out 0.1s, transform 0.6s ease-out 0.1s"
+          transition: "opacity 0.6s ease-out 0.1s, transform 0.6s ease-out 0.1s",
+          paddingRight: "80px",
         }}
       >
         Live Invoice Dashboard
       </h1>
-      {/* Three columns with grid for vertical fit, no scroll */}
+      {/* Responsive columns */}
       <div
+        className="dashboard-content"
         style={{
-          display: "flex",
-          flexDirection: "row",
-          gap: "3vw",
-          justifyContent: "flex-start",
-          alignItems: "stretch",
-          height: gridAvailableHeight,
-          minHeight: 0
+          display: "grid",
+          gridTemplateColumns: `repeat(${colCount}, 1fr)`,
+          gap: "2rem"
         }}
       >
-        {columns.map((col, colIdx) => (
-          <div key={colIdx} style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
-            {col.map((person, index) => renderPerson(person, index + colIdx * numRows))}
+        {data.map((person, index) => (
+          <div key={person.name} className="dashboard-item">
+            {renderPerson(person, index)}
           </div>
         ))}
       </div>
